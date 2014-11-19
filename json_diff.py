@@ -8,7 +8,6 @@ import copy
 
 class JSON_Diff:
     def __init__(self, json_file, json_model, list_depth=0):
-        # nothing to init
         try:
             self.json_file = json.load(open(json_file))
         except IOError:
@@ -18,10 +17,12 @@ class JSON_Diff:
 
         model_json = []
         model_name = []
+        self.is_directory = True
         if os.path.isfile(json_model):
             try:
                 model_json.append(json.load(open(json_model)))
                 model_name.append(json_model)
+                self.is_directory = False
             except IOError:
                 print "Model file not found. Check name and try again"
                 exit(1)
@@ -460,25 +461,23 @@ class JSON_Diff:
         for model in self.model:
             if useModel:
                 if self.equalsModel(self.json_file, model[0]):
-                    return model[1]
+                    return model[1] if self.is_directory else True
             else:
                 if self.equalsJSON(self.json_file, model[0]):
-                    return model[1]
+                    return model[1] if self.is_directory else True
         # no match
-        return "Not equal" if not useModel else ""
+        return False
 
     def diff(self, useModel):
-        for model in self.model:
-            if useModel:
-                self.diffModel(self.json_file, model[0])
-            else:
-                self.diffJSON(self.json_file, model[0])
-            print model[1]
-            for change in self.difference:
-                print change.encode('ascii', 'replace')
-            # Reinitialize so that we can run against multiple models
-            self.difference = []
-            self.list_depth = 0
+        if useModel:
+            self.diffModel(self.json_file, self.model[0][0])
+        else:
+            self.diffJSON(self.json_file, self.model[0][0])
+        for change in self.difference:
+            print change.encode('ascii', 'replace')
+        # Reinitialize so that we can run against multiple models
+        self.difference = []
+        self.list_depth = 0
 
 
 def main():
@@ -500,18 +499,21 @@ def main():
     p.add_argument('--mode', choices=['j2j', 'j2m'], default='j2j',
                    help="Determine what mode to use. Default is %(default)s. j2m (json to model) for regex support")
     p.add_argument('-d', '--diff', action="store_true",
-                   help="Set tool to do diff instead of comparison. (comparison if not flagged)."
-                        " ** NOTE JSON to model not yet supported")
+                   help="Set tool to do diff instead of comparison. (comparison if not flagged).")
     p.add_argument('json', help='The path of the json file')
     p.add_argument('json_model', metavar='json/json_model',
-                   help="The path of the .json file or directory of .json models with regex support")
+                   help="The path of the .json file or directory of .json models with regex support"
+                        "**Note we currently do not support diffs between a file and a directory")
 
     options = p.parse_args()
 
     diff_engine = JSON_Diff(options.json, options.json_model)
 
     if options.diff:
-        diff_engine.diff(options.mode == 'j2m')
+        if os.path.isdir(options.json_model):
+            raise Exception("Unsupported operation: We do not allow diff against a directory. Must provide a filename")
+        else:
+            diff_engine.diff(options.mode == 'j2m')
     else:
         print diff_engine.comparison(options.mode == 'j2m')
 
