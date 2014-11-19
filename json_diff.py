@@ -140,7 +140,7 @@ class JSON_Diff:
 
             if type(json_list[index]) is dict:
                 # do json comparison
-                if not self.equalsModel(json_list[index], regex_list[index]):
+                if not self.equals_model(json_list[index], regex_list[index]):
                     return False
 
             elif type(json_list[index]) is list:
@@ -170,9 +170,18 @@ class JSON_Diff:
     ' The model will treat all keys as regexes. All values will be dicts, lists, or regexes
     '''
 
-    def equalsModel(self, json_input, model):
-        json_keys = json_input.keys()
-        model_keys = model.keys()
+    def equals_model(self, json_input, model):
+        json_keys = []
+        model_keys = []
+        if type(json_input) is dict and type(model) is dict:
+            json_keys = json_input.keys()
+            model_keys = model.keys()
+        elif type(json_input) is list and type(model) is list:
+            return self.lists_equal(json_input, model)
+        elif type(json_input) is not type(model):
+            return False
+        else:
+            raise Exception("ERROR: Not proper JSON format")
 
         # check size
         if not len(json_keys) == len(model_keys):
@@ -181,16 +190,16 @@ class JSON_Diff:
         # check 1-1 correspondence
         key_matches = self.__one_to_one__(json_keys, model_keys)
 
-        if not len(json_input.keys()) == len(key_matches.keys()):
+        if not len(json_keys) == len(key_matches.keys()):
             return False
 
         # check values
         for key in key_matches.keys():
-            if not type(json_input.get(key_matches[key])) == type(model[key]):
+            if not type(json_input.get((key_matches[key]))) == type(model[key]):
                 return False
             if type(model[key]) is dict:
                 # recursive search
-                if not self.equalsModel(json_input.get(key_matches[key]), model[key]):
+                if not self.equals_model(json_input.get(key_matches[key]), model[key]):
                     return False
                     # otherwise continue
 
@@ -460,7 +469,7 @@ class JSON_Diff:
     def comparison(self, useModel):
         for model in self.model:
             if useModel:
-                if self.equalsModel(self.json_file, model[0]):
+                if self.equals_model(self.json_file, model[0]):
                     return model[1] if self.is_directory else True
             else:
                 if self.equalsJSON(self.json_file, model[0]):
