@@ -15,27 +15,29 @@ This repository will treat two types of JSON necessary for our purpose:
     * As JSON can be in a non-deterministic order, this is harder 
         than doing a straight string comparison
     
-The progression of development will be:
+###There are four modes of this module
 
-- [x] Equivalence of regular JSON
+1. Regular JSON comparison
+2. JSON to Model comparison
+3. Regular JSON diff
+4. JSON to Model Diff
 
-- [x] Comparison of regular JSON to a model JSON file
-    
-- [x] Equivalence of JSON file to a list of models
-   - This can be used for classification purposes
-
-- [x] Diff tool of regular JSON
-   - Known issue handling deletions from list, possibly fixed by 2-pass diff
-
-- [x] Diff tool or regular JSON compared to a model JSON file
-   - This tool supports regexes for only leaves in the JSON structure for simplification
-
-
-##Command Line Usages
-To do an json to json comparison (default behavior):
+##1. Regular JSON comparison
+This simply tests whether two files contating json are the same
 ```bash
 ./json_diff.py path/to/file1.json path/to/file2.json
 ```
+Returns True if equal or False otherwise.
+
+```bash
+.json_diff.py path/to/file1.json path/to/json_directory/
+```
+Returns first match if there is one, or False otherwise.
+
+
+
+##Command Line Usages
+
 To do a json to model comparison (regex support):
 ```bash
 ./json_diff.py -m j2m path/to/pure.json path/to/regex.json
