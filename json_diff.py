@@ -28,16 +28,15 @@ class JSON_Diff:
                 exit(1)
         elif os.path.isdir(json_model):
             for item in os.listdir(json_model):
-                if item.endswith(".json"):
-                    try:
-                        # make a tuple to store filename
-                        if not json_model.endswith('/'):
-                            json_model += '/'
-                        filename = json_model + item
-                        model_json.append(json.load(open(filename)))
-                        model_name.append(item)
-                    except IOError:
-                        print "Could not open file"
+                try:
+                    # make a tuple to store filename
+                    if not json_model.endswith('/'):
+                        json_model += '/'
+                    filename = json_model + item
+                    model_json.append(json.load(open(filename)))
+                    model_name.append(item)
+                except IOError:
+                    print "Could not open file"
         else:
             print "File or directory not found. Check name and try again."
             exit(1)
@@ -369,7 +368,6 @@ class JSON_Diff:
                     #failed surface match
                     #might be a match later on in the list
                     index_to_irrelevance[cur_index] = -1  # to indicate no possible match
-                    continue
                 else:
                     #failed, but do recursive search to find best match
                     new_path = "%s[%s]" % (path, index)
@@ -484,9 +482,11 @@ class JSON_Diff:
             self.diffJSON(self.json_file, self.model[0][0])
         for change in self.difference:
             print change.encode('ascii', 'replace')
+        difference = self.difference
         # Reinitialize so that we can run against multiple models
         self.difference = []
         self.list_depth = 0
+        return difference
 
 
 def main():
