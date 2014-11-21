@@ -418,13 +418,21 @@ class JSON_Diff:
                 _json2.remove(_json2[match_index])
 
         #At this point we have two lists with the items that could not be matched
-        for (index, item) in enumerate(match for match in _json1 if match not in json1_matches):
-            new_path = "%s[%s]" % (path, _json1.index(item))
-            self.expandDiff(item, new_path, True)
+        match_index = 0
+        for index in range(len(_json1)):
+            if match_index < len(json1_matches) and _json1[index] == json1_matches[match_index]:
+                match_index += 1
+            else:
+                new_path = "%s[%s]" % (path, index)
+                self.expandDiff(_json1[index], new_path, True)
 
-        for (index, item) in enumerate(match for match in _json2):
-            new_path = "%s[%s]" % (path, json2_original.index(item))
-            self.expandDiff(item, new_path, False)
+        original_index = 0
+        for index in range(len(_json2)):
+            while not _json2[index] == json2_original[::-1][original_index]:
+                original_index += 1
+            new_path = "%s[%s]" % (path, len(json2_original) - original_index - 1)
+            self.expandDiff(_json2[index], new_path, False)
+            original_index += 1
 
     def diffJSON_item(self, _json1, _json2, path, useRegex):
         if useRegex and type(_json2) is unicode:
@@ -455,17 +463,19 @@ class JSON_Diff:
                     new_path = key
                 else:
                     new_path = "%s.%s" % (path, key)
-                self.difference.append('%s: %s - %s' % (c, new_path, key))
-                self.expandDiff(blob[key], new_path, new_item)
+                if type(blob[key]) not in [list, dict]:
+                    self.difference.append('%s: %s=%s' % (c, new_path, blob[key]))
+                else:
+                    self.expandDiff(blob[key], new_path, new_item)
         elif type(blob) is list:
             for (index, item) in enumerate(blob):
                 new_path = "%s[%s]" % (path, index)
                 if type(blob[index]) in (list, dict):
                     self.expandDiff(item[index], new_path, new_item)
                 else:
-                    self.difference.append('%s: %s - %s' % (c, new_path, blob[index]))
+                    self.difference.append('%s: %s=%s' % (c, new_path, blob[index]))
         else:
-            self.difference.append('%s: %s - %s' % (c, path, blob))
+            self.difference.append('%s: %s=%s' % (c, path, blob))
 
     def comparison(self, useModel):
         for model in self.model:

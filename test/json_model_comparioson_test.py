@@ -186,4 +186,4 @@ class JsonModelComparisonTest(TestHelper):
         self.write_string_to_file('["test3"]', "dir_item3", dirname)
         comparison_tool = JSON_Diff(filename1, 'tmp/' + dirname)
         self.assertEqual(comparison_tool.comparison(useModel=True), "dir_item1")
-        self.cleanup()
+        self.cleanup()u'Changed: key to value1 from value2'
