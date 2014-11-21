@@ -106,9 +106,9 @@ Should produce output like:
 ```bash
 TypeDifference : accounting[0].firstName - is bool: (True), but was unicode: (John)
 Changed: accounting[1].firstName to Susan from Mary
-+: sales[0].size - 27
--: sales[0].age - 27
--: sales[1].lastName - Galley
++: sales[0].size =27
+-: sales[0].age=27
+-: sales[1].lastName=Galley
 ```
 
 
@@ -172,7 +172,7 @@ Then
 
 Should produce output
 ```bash
-+: accounting[0].firstName - John
++: accounting[0].firstName=John
 Changed: sales[0].age to 27 from 24
 ```
 
