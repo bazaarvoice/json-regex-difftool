@@ -318,6 +318,7 @@ class JSON_Diff:
         # save a snapshot of difference for comparison in the different recursive branches
         current_difference = copy.deepcopy(self.difference)
         json1_matches = []
+        json2_original = copy.deepcopy(_json2)
         #Try to find a match for each item in JSON1
         '''
         ' This WILL find a match for the first item in a a list of similar dictionaries
@@ -396,6 +397,8 @@ class JSON_Diff:
             ' We might need to fix this to make it a 2-pass diff
             '''
             indices = index_to_irrelevance.keys()
+            if len(indices) == 0:
+                break
             indices.sort()
             best_match_score = -1
             match_index = indices[0]
@@ -416,12 +419,12 @@ class JSON_Diff:
 
         #At this point we have two lists with the items that could not be matched
         for (index, item) in enumerate(match for match in _json1 if match not in json1_matches):
-            new_path = "%s[%s]" % (path, index)
-            self.expandDiff(_json1[index], new_path, True)
+            new_path = "%s[%s]" % (path, _json1.index(item))
+            self.expandDiff(item, new_path, True)
 
-        for (index, item) in enumerate(_json2):
-            new_path = "%s[%s]" % (path, index)
-            self.expandDiff(_json2[index], new_path, False)
+        for (index, item) in enumerate(match for match in _json2):
+            new_path = "%s[%s]" % (path, json2_original.index(item))
+            self.expandDiff(item, new_path, False)
 
     def diffJSON_item(self, _json1, _json2, path, useRegex):
         if useRegex and type(_json2) is unicode:
