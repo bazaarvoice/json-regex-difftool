@@ -1,22 +1,25 @@
 #!/usr/bin/env python
 import argparse
 import json
+import logging
 import os
 import re
 import copy
 
+
+logger = logging.getLogger('json_diff')
 
 class JSON_Diff:
     def __init__(self, json_file, json_model, list_depth=0):
         try:
             self.json_file = json.load(open(json_file))
         except IOError:
-            print "JSON File not found. Check name and try again."
+            logger.error("JSON File not found. Check name and try again.")
             self.json_file = None
             exit(1)
 
-        model_json = []
-        model_name = []
+        model_json = []  # List of actual JSON objects
+        model_name = []  # List of file names to run in the case of a match on a directory
         self.is_directory = True
         if os.path.isfile(json_model):
             try:
@@ -24,7 +27,7 @@ class JSON_Diff:
                 model_name.append(json_model)
                 self.is_directory = False
             except IOError:
-                print "Model file not found. Check name and try again"
+                logger.error("Model file not found. Check name and try again")
                 exit(1)
         elif os.path.isdir(json_model):
             for item in os.listdir(json_model):
@@ -36,19 +39,18 @@ class JSON_Diff:
                     model_json.append(json.load(open(filename)))
                     model_name.append(item)
                 except IOError:
-                    print "Could not open file"
+                    logger.error("Could not open file")
         else:
-            print "File or directory not found. Check name and try again."
+            logger.error("File or directory not found. Check name and try again.")
             exit(1)
 
-        self.model = zip(model_json, model_name)
+        self.model = zip(model_json, model_name)  # Combine into one map
         self.difference = []
         # variable to control how deep to recursively search-- currently not used
         self.list_depth = list_depth
 
-        # if len(self.model) < 1:
-        # print "No files could be read in specified directory"
-
+        if len(self.model) < 1:
+            logger.warn("No files could be read in specified directory")
 
     def __clear_match_row__(self, match_table, row, cur_index):
         for i in range(len(match_table[0])):
@@ -124,7 +126,7 @@ class JSON_Diff:
             return final_mapping
 
         else:  # ambiguous
-            print ("ERROR: ambiguous matching please fix your model to use more specific regexes")
+            logger.error("Ambiguous matching please fix your model to use more specific regexes")
             exit(1)
 
     def lists_equal(self, json_list, regex_list):
@@ -180,7 +182,8 @@ class JSON_Diff:
         elif type(json_input) is not type(model):
             return False
         else:
-            raise Exception("ERROR: Not proper JSON format")
+            logger.error("Not proper JSON format. Please check your input")
+            exit(1)
 
         # check size
         if not len(json_keys) == len(model_keys):
@@ -533,8 +536,13 @@ def main():
     p.add_argument('json_model', metavar='json/json_model',
                    help="The path of the .json file or directory of .json models with regex support"
                         "**Note we currently do not support diffs between a file and a directory")
+    p.add_argument('--logging_level', default='INFO', help="e.g. WARNING, INFO, DEBUG, 10, 50, etc...")
 
     options = p.parse_args()
+
+    if hasattr(options, 'logging_level'):
+        root_logger = logging.getLogger('json_diff')
+        root_logger.setLevel(options.logging_level)
 
     diff_engine = JSON_Diff(options.json, options.json_model)
 
