@@ -74,6 +74,14 @@ class JsonJsonDiffTest(TestHelper):
                          [u'-: [1]=test1'])
         self.cleanup()
 
+    def test_switch_order(self):
+        new_file = self.write_string_to_file('["test1", "test2"]', "item1")
+        old_file = self.write_string_to_file('["test2", "test1"]', "item2")
+        comparison_tool = JSON_Diff(new_file, old_file)
+        self.assertEqual(comparison_tool.diff(useModel=False),
+                         [u'+: [1]=test2', u'-: [0]=test2'])
+        self.cleanup()
+
     def test_list_subtract_multiple_matches(self):
         """
         When multiple list items match, we should pick the first one.

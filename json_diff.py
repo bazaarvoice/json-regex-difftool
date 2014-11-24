@@ -46,8 +46,8 @@ class JSON_Diff:
         # variable to control how deep to recursively search-- currently not used
         self.list_depth = list_depth
 
-        #if len(self.model) < 1:
-        #print "No files could be read in specified directory"
+        # if len(self.model) < 1:
+        # print "No files could be read in specified directory"
 
 
     def __clear_match_row__(self, match_table, row, cur_index):
@@ -82,12 +82,12 @@ class JSON_Diff:
         num_matches, index, turns_wo_match = 0, 0, 0
         max_index = 2 * dim
         minimized = [False for i in range(2 * dim)]
-        #loop until all matched or no more minimizations possible
+        # loop until all matched or no more minimizations possible
         while num_matches < max_index and turns_wo_match < max_index and not sums == [1] * (2 * dim):
             if sums[index] == 0:
-                return {}  #no match for one of the fields
+                return {}  # no match for one of the fields
             elif sums[index] == 1 and not minimized[index]:
-                #find coordinate
+                # find coordinate
                 #could write with more code reuse, but this is more intuitive to read
                 if index < dim:  #in a row
                     for i in range(dim):
@@ -116,14 +116,14 @@ class JSON_Diff:
         if num_matches == max_index or sums == [1] * (2 * dim):
             final_mapping = {}
             for i in range(dim):
-                #find match
+                # find match
                 for j in range(dim):
                     if match_chart[i][j] == 1:
                         final_mapping[regexes[i]] = strings[j]
                         continue
             return final_mapping
 
-        else:  #ambiguous
+        else:  # ambiguous
             print ("ERROR: ambiguous matching please fix your model to use more specific regexes")
             exit(1)
 
@@ -232,20 +232,21 @@ class JSON_Diff:
     def diffModel(self, _json1, _json2, path='', depth=-1):
         if not type(_json1) == type(_json2):
             if type(_json2) is unicode and type(_json1) not in [list, dict]:
-                #Potential regex match
+                # Potential regex match
                 self.diffJSON_item(_json1, _json2, path, True)
             else:
                 self.difference.append('TypeDifference : %s - %s: (%s), %s: (%s)' % (
                     path, type(_json1).__name__, str(_json1), type(_json2).__name__, str(_json2)))
         else:
             # they are the same type
-            #Three choices: dict, list, item
+            # Three choices: dict, list, item
             if type(_json1) is dict:
                 self.diffJSON_dict(_json1, _json2, path, depth, True)
             elif type(_json1) is list:
                 self.diffJSON_list(_json1, _json2, path, depth, True)
             else:
                 self.diffJSON_item(_json1, _json2, path, True)
+
     '''
     ' This code computes the diff between two different JSON objects.
     ' It also computes a line by line delta to be used to determine similarity
@@ -259,13 +260,14 @@ class JSON_Diff:
     ' Depth == 0 -> do straight list or dict equivalence
     ' Depth > 0 do recursive search, but decrement depth so we do not search forever
     '''
+
     def diffJSON(self, _json1, _json2, path='', depth=-1):
         if not type(_json1) == type(_json2):
             self.difference.append('TypeDifference : %s - is %s: (%s), but was %s: (%s)' % (
                 path, type(_json1).__name__, str(_json1), type(_json2).__name__, str(_json2)))
         else:
             # they are the same type
-            #Three choices: dict, list, item
+            # Three choices: dict, list, item
             if type(_json1) is dict:
                 self.diffJSON_dict(_json1, _json2, path, depth, False)
             elif type(_json1) is list:
@@ -275,7 +277,7 @@ class JSON_Diff:
 
     def diffJSON_dict(self, _json1, _json2, path, depth, useRegex):
         # Depth greater > 0 indicates we should compare keys
-        #Negative depth means continuously recursively search
+        # Negative depth means continuously recursively search
         if not depth == 0:
             json1_keys = _json1.keys()
             json2_keys = _json2.keys()
@@ -286,11 +288,11 @@ class JSON_Diff:
                 else:
                     new_path = '%s.%s' % (path, key)
                 if key in json2_keys:
-                    #match
+                    # match
                     matched_keys.append(key)
                     json2_keys.remove(key)
                 else:
-                    #key in json1 that is not in json2
+                    # key in json1 that is not in json2
                     #expand that k-v pair into diff
                     self.expandDiff(_json1[key], new_path, True)
             for key in json2_keys:
@@ -298,11 +300,11 @@ class JSON_Diff:
                     new_path = key
                 else:
                     new_path = '%s.%s' % (path, key)
-                #all keys remaining are in 2, but not 1
+                # all keys remaining are in 2, but not 1
                 #expand these k-v pairs into diff as well
                 self.expandDiff(_json2[key], new_path, False)
 
-            #now that we have matched keys, recursively search
+            # now that we have matched keys, recursively search
             for key in matched_keys:
                 if len(path) == 0:
                     new_path = key
@@ -319,16 +321,17 @@ class JSON_Diff:
         current_difference = copy.deepcopy(self.difference)
         json1_matches = []
         json2_original = copy.deepcopy(_json2)
-        #Try to find a match for each item in JSON1
+        # Try to find a match for each item in JSON1
         '''
         ' This WILL find a match for the first item in a a list of similar dictionaries
         ' even if later dictionaries in the list are a better match
         '
         ' TODO Fix this bug -- 2 pass diff?
         '''
+        cur_index = 0
         for (index, item) in enumerate(_json1):
-            cur_index = 0
-            #map from the index in the list to irrelevance score
+            prev_index = cur_index
+            # map from the index in the list to irrelevance score
             #irrelevance score is higher the more unrelated-- 0 is perfect match
             index_to_irrelevance = {}
             #map from the index in the list to the changeset associated between this 'item' and _json2[index]
@@ -345,7 +348,7 @@ class JSON_Diff:
                         #we can use as a pattern though item could be an integer say
                         match = re.match(_json2[cur_index], str(item))
                         if match:
-                            index_to_irrelevance = 0
+                            index_to_irrelevance[cur_index] = 0
                             json1_matches.append(item)
                             _json2.remove(_json2[cur_index])
                             break
@@ -353,10 +356,9 @@ class JSON_Diff:
                             #no possible match
                             #todo should we include changeset?
                             index_to_irrelevance[cur_index] = -1
-                            continue
                     else:
                         #Can't use regex-- test strict equality
-                        if(item == _json2[cur_index]):
+                        if (item == _json2[cur_index]):
                             #perfect match
                             index_to_irrelevance = 0
                             json1_matches.append(item)
@@ -404,6 +406,7 @@ class JSON_Diff:
             match_index = indices[0]
             for i in indices:
                 if index_to_irrelevance[i] == 0:
+                    best_match_score = 0
                     break
                 elif index_to_irrelevance[i] < 0:
                     continue
@@ -416,8 +419,11 @@ class JSON_Diff:
                 self.difference.extend(index_to_changeset[match_index])
                 json1_matches.append(item)
                 _json2.remove(_json2[match_index])
+                cur_index = match_index   # Should be the spot right after the match
+            elif best_match_score < 0:
+                cur_index = prev_index
 
-        #At this point we have two lists with the items that could not be matched
+        # At this point we have two lists with the items that could not be matched
         match_index = 0
         for index in range(len(_json1)):
             if match_index < len(json1_matches) and _json1[index] == json1_matches[match_index]:
@@ -451,6 +457,7 @@ class JSON_Diff:
     'new_item is true if we are in the new json (things added)
     'new_item is false if we are in in the old json (things removed)
     '''
+
     def expandDiff(self, blob, path, new_item):
         # Three possibilities: dict, list, item
         if new_item:

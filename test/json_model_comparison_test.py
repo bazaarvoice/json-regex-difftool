@@ -27,9 +27,9 @@ class JsonModelComparisonTest(TestHelper):
 
     def test_single_item_regex_not_equal(self):
         filename1 = self.write_string_to_file('["test"]', "item1")
-        filename2 = self.write_string_to_file('["[0-9]*"]', "item2")
+        filename2 = self.write_string_to_file('["[0-9]+"]', "item2")
         comparison_tool = JSON_Diff(filename1, filename2)
-        self.assertTrue(comparison_tool.comparison(useModel=True))
+        self.assertFalse(comparison_tool.comparison(useModel=True))
         self.cleanup()
 
     def test_regex_match_key(self):
@@ -46,7 +46,7 @@ class JsonModelComparisonTest(TestHelper):
         self.assertTrue(comparison_tool.comparison(useModel=True))
         self.cleanup()
 
-    def test_regex_matke_key_and_value(self):
+    def test_regex_match_key_and_value(self):
         filename1 = self.write_string_to_file('{"key":"value"}', "item1")
         filename2 = self.write_string_to_file('{"(.*)":"(.*)"}', "item2")
         comparison_tool = JSON_Diff(filename1, filename2)
@@ -97,8 +97,6 @@ class JsonModelComparisonTest(TestHelper):
         filename1 = self.write_string_to_file('["test1", "test2"]', "item1")
         filename2 = self.write_string_to_file('["test2", "(.*)"]', "item2")
         comparison_tool = JSON_Diff(filename1, filename2)
-        # We cannot match ambigous regular expressions
-        # Todo create a recursive search to fix this problem
         self.assertFalse(comparison_tool.comparison(useModel=True))
         self.cleanup()
 
@@ -156,12 +154,13 @@ class JsonModelComparisonTest(TestHelper):
         """
         A match in a directory should return the filename that it matched
         """
-        dirname = "test/"
-        filename1 = self.write_string_to_file('["test1"]', "item1")
-        self.write_string_to_file('["test1"]', "dir_item1", dirname)
-        self.write_string_to_file('["test2"]', "dir_item2", dirname)
-        self.write_string_to_file('["test3"]', "dir_item3", dirname)
-        comparison_tool = JSON_Diff(filename1, 'tmp/' + dirname)
+        filename = self.write_string_to_file('["test1"]', "item1")
+        dirname = self.write_files_to_directory({
+            "dir_item1": '["test1"]',
+            "dir_item2": '["test2"]',
+            "dir_item3": '["test3"]',
+        }, "test")
+        comparison_tool = JSON_Diff(filename, dirname)
         self.assertEqual(comparison_tool.comparison(useModel=True), "dir_item1")
         self.cleanup()
 
@@ -169,21 +168,23 @@ class JsonModelComparisonTest(TestHelper):
         """
         When there is no match in a directory, we should return False
         """
-        dirname = "test/"
-        filename1 = self.write_string_to_file('["test1"]', "item1")
-        self.write_string_to_file('["test4"]', "dir_item1", dirname)
-        self.write_string_to_file('["test2"]', "dir_item2", dirname)
-        self.write_string_to_file('["test3"]', "dir_item3", dirname)
-        comparison_tool = JSON_Diff(filename1, 'tmp/' + dirname)
+        filename = self.write_string_to_file('["test1"]', "item1")
+        dirname = self.write_files_to_directory({
+            "dir_item1": '["test4"]',
+            "dir_item2": '["test2"]',
+            "dir_item3": '["test3"]',
+        }, "test")
+        comparison_tool = JSON_Diff(filename, dirname)
         self.assertFalse(comparison_tool.comparison(useModel=True))
         self.cleanup()
 
     def test_find_directory_match_regex(self):
-        dirname = "test/"
         filename1 = self.write_string_to_file('["test1"]', "item1")
-        self.write_string_to_file('["(.*)"]', "dir_item1", dirname)
-        self.write_string_to_file('["test2"]', "dir_item2", dirname)
-        self.write_string_to_file('["test3"]', "dir_item3", dirname)
-        comparison_tool = JSON_Diff(filename1, 'tmp/' + dirname)
+        dirname = self.write_files_to_directory({
+            "dir_item1": '["(.*)"]',
+            "dir_item2": '["test2"]',
+            "dir_item3": '["test3"]',
+        }, "test")
+        comparison_tool = JSON_Diff(filename1, dirname)
         self.assertEqual(comparison_tool.comparison(useModel=True), "dir_item1")
-        self.cleanup()u'Changed: key to value1 from value2'
+        self.cleanup()
