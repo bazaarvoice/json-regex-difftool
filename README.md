@@ -3,7 +3,7 @@ JSON to JSON diff tool
 
 ##Introduction
 
-A module for checking equivalence and difference of two JSONs with regex support
+A python module for checking equivalence and difference of two JSONs with regex support
 
 This repository will treat two types of JSON necessary for our purpose:
 
