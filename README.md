@@ -51,6 +51,8 @@ Returns the filename of the first match if there is one, or False otherwise.
 ##3. Regular JSON diff
 This mode computes a file diff between two JSON files.
 
+*The logic flow of this code is loosely based off of code found in https://github.com/monsur/jsoncompare*
+
 ####*Assuming*
 old.json:
 ```json
