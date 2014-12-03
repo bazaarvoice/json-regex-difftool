@@ -9,7 +9,8 @@ import copy
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger = logging.getLogger('json_diff')
-
+logger.addHandler(console_handler)
+logger.setLevel("WARN")
 
 class JsonDiff:
     def __init__(self, json_file, json_model, list_depth=0):
@@ -28,7 +29,8 @@ class JsonDiff:
         self.list_depth = list_depth
 
         if len(self.model) < 1:
-            logger.warn("No files could be read in specified directory")
+            logger.error("No files could be read in specified directory")
+            exit(1)
 
     def _set_up_model_map(self, json_model):
         model_map = {}
@@ -161,17 +163,16 @@ class JsonDiff:
 
         return True
 
-    '''
-    ' Our general process will be to read both inputs as json objects
-    ' We will then conduct a DFS
-    ' At each level, check that the size of the key set is the same
-    ' Check that the key set has a 1-1 correspondence
-    ' Check for each key that the values are the same
-    '
-    ' The model will treat all keys as regexes. All values will be dicts, lists, or regexes
-    '''
-
     def equals_model(self, json_input, model):
+        """
+        Our general process will be to read both inputs as json objects
+        We will then conduct a DFS
+        At each level, check that the size of the key set is the same
+        Check that the key set has a 1-1 correspondence
+        Check for each key that the values are the same
+
+        The model will treat all keys as regexes. All values will be dicts, lists, or regexes
+        """
         json_keys = []
         model_keys = []
         if type(json_input) is dict and type(model) is dict:
@@ -517,7 +518,7 @@ def main():
     p = argparse.ArgumentParser(
         description='Tool to check equivalence and difference of two JSON files with regex support',
         formatter_class=argparse.RawTextHelpFormatter,
-        epilog='NOTE: If there are no regexes in your JSON use the j2j option\n\n'
+        epilog='NOTE: If there are no regexes in your JSON do not use the --use_model flag\n\n'
                'Usage examples: \n\n'
                'To do JSON to JSON comparison (default behavior):\n'
                '   ./json_diff.py path/to/file1.json path/to/file2.json \n\n'
@@ -529,22 +530,16 @@ def main():
                '    ./json_diff.py -d path/to/new.json path/to/old.json'
 
     )
-    p.add_argument('--mode', choices=['j2j', 'j2m'], default='j2j',
-                   help="Determine what mode to use. Default is %(default)s. j2m (json to model) for regex support")
+    p.add_argument('--use_model', action="store_true",
+                   help="Determine whether to treat second input as regular json or a model file with regex support")
     p.add_argument('-d', '--diff', action="store_true",
                    help="Set tool to do diff instead of comparison. (comparison if not flagged).")
     p.add_argument('json', help='The path of the json file')
     p.add_argument('json_model', metavar='json/json_model',
                    help="The path of the .json file or directory of .json models with regex support"
-                        "**Note we currently do not support diffs between a file and a directory")
-    p.add_argument('--logging_level', default='INFO', help="e.g. WARNING, INFO, DEBUG, 10, 50, etc...")
+                        "**Note diffs between a file and a directory are not supported.")
 
     options = p.parse_args()
-
-    if hasattr(options, 'logging_level'):
-        root_logger = logging.getLogger('json_diff')
-        root_logger.addHandler(console_handler)
-        root_logger.setLevel(options.logging_level)
 
     diff_engine = JsonDiff(options.json, options.json_model)
 
@@ -552,9 +547,9 @@ def main():
         if os.path.isdir(options.json_model):
             raise Exception("Unsupported operation: We do not allow diff against a directory. Must provide a filename")
         else:
-            diff_engine.diff(options.mode == 'j2m')
+            diff_engine.diff(options.use_model)
     else:
-        logger.info(diff_engine.comparison(options.mode == 'j2m'))
+        logger.info(diff_engine.comparison(options.use_model))
 
 
 if __name__ == "__main__":
