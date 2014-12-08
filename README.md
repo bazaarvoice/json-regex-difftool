@@ -1,5 +1,6 @@
 JSON to JSON diff tool
 =================
+Found a bug? Need a new feature? Want to help out? Check out the [Contributor's guide](https://github.com/bazaarvoice/json-regex-difftool/blob/master/CONTRIBUTING.md)
 
 ##Introduction
 
