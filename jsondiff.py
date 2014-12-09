@@ -452,8 +452,8 @@ class JsonDiff:
                 elif index_to_irrelevance[i] < 0:
                     continue
                 else:
-                    if best_match_score < 0 or index_to_irrelevance[
-                        i] < best_match_score:
+                    if best_match_score < 0 \
+                            or index_to_irrelevance[i] < best_match_score:
                         best_match_score = index_to_irrelevance[i]
                         match_index = i
             if best_match_score > 0:
