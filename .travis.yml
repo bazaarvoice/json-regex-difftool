@@ -1,0 +1,8 @@
+language: python
+python:
+	- "2.6"
+	- "2.7"
+# Currently no dependencies other than nose
+# which is built in to travis
+
+script: nosetests
