@@ -76,6 +76,6 @@ class JsonModelDiffTest(TestHelper):
         filename2 = self.write_string_to_file('{"key1":"(.*)"}', "item2")
         comparison_tool = JsonDiff(filename1, filename2)
         self.assertEqual(comparison_tool.diff(use_model=True), [
-            "TypeDifference : key1 - dict: ({u'key2': u'value'}),"
+            "TypeDifference : key1 - dict: ({u'key2': u'value'}), "
             "unicode: ((.*))"])
         self.cleanup()
