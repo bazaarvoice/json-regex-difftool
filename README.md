@@ -1,5 +1,7 @@
 JSON to JSON diff tool
 =================
+[![Build Status](https://travis-ci.org/bazaarvoice/json-regex-difftool.svg?branch=master)](https://travis-ci.org/bazaarvoice/json-regex-difftool)
+
 Found a bug? Need a new feature? Want to help out? Check out the [Contributor's guide](https://github.com/bazaarvoice/json-regex-difftool/blob/master/CONTRIBUTING.md)
 
 ##Introduction
