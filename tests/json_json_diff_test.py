@@ -1,4 +1,4 @@
-from test_helper import TestHelper
+from test.test_helper import TestHelper
 from jsondiff import JsonDiff
 
 
