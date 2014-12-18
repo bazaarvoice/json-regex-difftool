@@ -1,5 +1,9 @@
-from test.test_helper import TestHelper
-from jsondiff import JsonDiff
+#!/usr/bin/env python
+
+from test_helper import TestHelper
+from json_regex_diff.jsondiff import JsonDiff
+
+
 
 
 class JsonJsonDiffTest(TestHelper):

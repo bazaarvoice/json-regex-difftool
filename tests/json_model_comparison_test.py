@@ -1,5 +1,5 @@
-from test.test_helper import TestHelper
-from jsondiff import JsonDiff
+from test_helper import TestHelper
+from json_regex_diff.jsondiff import JsonDiff
 
 
 class JsonModelComparisonTest(TestHelper):
