@@ -6,20 +6,15 @@ import os
 import re
 import copy
 
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-logger = logging.getLogger('json_diff')
-logger.addHandler(console_handler)
-logger.setLevel("WARN")
+class JsonDiff(object):
+    def __init__(self, json_file, json_model, list_depth=0,
+                 logger=logging.getLogger()):
 
-
-class JsonDiff:
-    def __init__(self, json_file, json_model, list_depth=0):
+        self._logger = logger
         try:
             self.json_file = json.load(open(json_file))
         except IOError:
-            logger.error("JSON File not found. Check name and try again.")
+            self._logger.error("JSON File not found. Check name and try again.")
             self.json_file = None
             exit(1)
 
@@ -32,7 +27,7 @@ class JsonDiff:
         self.list_depth = list_depth
 
         if len(self.model) < 1:
-            logger.error("No files could be read in specified directory")
+            self._logger.error("No files could be read in specified directory")
             exit(1)
 
     def _set_up_model_map(self, json_model):
@@ -41,7 +36,7 @@ class JsonDiff:
             try:
                 model_map[json_model] = json.load(open(json_model))
             except IOError:
-                logger.error("Model file not found. Check name and try again")
+                self._logger.error("Model file not found. Check name and try again")
                 exit(1)
         elif os.path.isdir(json_model):
             for item in os.listdir(json_model):
@@ -51,9 +46,9 @@ class JsonDiff:
                     filename = json_model + item
                     model_map[item] = json.load(open(filename))
                 except IOError:
-                    logger.error("Could not open file")
+                    self._logger.error("Could not open file")
         else:
-            logger.error("File or directory not found."
+            self._logger.error("File or directory not found."
                          " Check name and try again.")
             exit(1)
         return model_map
@@ -136,7 +131,7 @@ class JsonDiff:
             return final_mapping
 
         else:  # ambiguous
-            logger.error("Ambiguous matching please fix your model "
+            self._logger.error("Ambiguous matching please fix your model "
                          "to use more specific regexes")
             exit(1)
 
@@ -193,7 +188,7 @@ class JsonDiff:
         elif type(json_input) is not type(model):
             return False
         else:
-            logger.error("Not proper JSON format. Please check your input")
+            self._logger.error("Not proper JSON format. Please check your input")
             exit(1)
 
         # check size
@@ -550,11 +545,11 @@ class JsonDiff:
                 self.diff_model(self.json_file, self.model[model_name])
             else:
                 self.diff_json(self.json_file, self.model[model_name])
-            logger.info('Diff from {}\n'.format(model_name))
+            self._logger.info('Diff from {}\n'.format(model_name))
             for change in self.difference:
                 # log instead of print,
                 # in case a module wants to suppress output
-                logger.info(change.encode('ascii', 'replace'))
+                self._logger.info(change.encode('ascii', 'replace'))
             difference.append(self.difference)
             # Reinitialize so that we can run against multiple models
             self.difference = []
@@ -599,7 +594,14 @@ def main():
 
     options = p.parse_args()
 
-    diff_engine = JsonDiff(options.json, options.json_model)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger = logging.getLogger('jsondiff')
+    logger.addHandler(console_handler)
+    logger.setLevel("INFO")
+
+    diff_engine = JsonDiff(options.json, options.json_model, 0, logger)
 
     if options.diff:
         if os.path.isdir(options.json_model):
