@@ -8,21 +8,13 @@ import copy
 
 class JsonDiff(object):
     def __init__(self, json_file, json_model, list_depth=0,
-                 logger=None):
+                 logger=logging.getLogger()):
 
-        if not logger:
-            console_handler = logging.StreamHandler()
-            console_handler.setFormatter(logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-            logger = logging.getLogger('json_diff')
-            logger.addHandler(console_handler)
-            logger.setLevel("WARN")
-
-        self.logger = logger
+        self._logger = logger
         try:
             self.json_file = json.load(open(json_file))
         except IOError:
-            self.logger.error("JSON File not found. Check name and try again.")
+            self._logger.error("JSON File not found. Check name and try again.")
             self.json_file = None
             exit(1)
 
@@ -35,7 +27,7 @@ class JsonDiff(object):
         self.list_depth = list_depth
 
         if len(self.model) < 1:
-            self.logger.error("No files could be read in specified directory")
+            self._logger.error("No files could be read in specified directory")
             exit(1)
 
     def _set_up_model_map(self, json_model):
@@ -44,7 +36,7 @@ class JsonDiff(object):
             try:
                 model_map[json_model] = json.load(open(json_model))
             except IOError:
-                self.logger.error("Model file not found. Check name and try again")
+                self._logger.error("Model file not found. Check name and try again")
                 exit(1)
         elif os.path.isdir(json_model):
             for item in os.listdir(json_model):
@@ -54,9 +46,9 @@ class JsonDiff(object):
                     filename = json_model + item
                     model_map[item] = json.load(open(filename))
                 except IOError:
-                    self.logger.error("Could not open file")
+                    self._logger.error("Could not open file")
         else:
-            self.logger.error("File or directory not found."
+            self._logger.error("File or directory not found."
                          " Check name and try again.")
             exit(1)
         return model_map
@@ -139,7 +131,7 @@ class JsonDiff(object):
             return final_mapping
 
         else:  # ambiguous
-            self.logger.error("Ambiguous matching please fix your model "
+            self._logger.error("Ambiguous matching please fix your model "
                          "to use more specific regexes")
             exit(1)
 
@@ -196,7 +188,7 @@ class JsonDiff(object):
         elif type(json_input) is not type(model):
             return False
         else:
-            self.logger.error("Not proper JSON format. Please check your input")
+            self._logger.error("Not proper JSON format. Please check your input")
             exit(1)
 
         # check size
@@ -553,11 +545,11 @@ class JsonDiff(object):
                 self.diff_model(self.json_file, self.model[model_name])
             else:
                 self.diff_json(self.json_file, self.model[model_name])
-            self.logger.info('Diff from {}\n'.format(model_name))
+            self._logger.info('Diff from {}\n'.format(model_name))
             for change in self.difference:
                 # log instead of print,
                 # in case a module wants to suppress output
-                self.logger.info(change.encode('ascii', 'replace'))
+                self._logger.info(change.encode('ascii', 'replace'))
             difference.append(self.difference)
             # Reinitialize so that we can run against multiple models
             self.difference = []
