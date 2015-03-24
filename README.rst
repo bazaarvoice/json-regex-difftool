@@ -135,11 +135,11 @@ Should produce output like:
 
 .. code:: bash
 
-    TypeDifference : accounting[0].firstName - is bool: (True), but was unicode: (John)
-    Changed: accounting[1].firstName to Susan from Mary
-    +: sales[0].size =27
-    -: sales[0].age=27
-    -: sales[1].lastName=Galley
+    2015-03-24 12:59:08,576 - jsondiff - INFO - TypeDifference : accounting[0].firstName - is bool: (True), but was unicode: (John)
+    2015-03-24 12:59:08,576 - jsondiff - INFO - Changed: accounting[1].firstName to Susan from Mary
+    2015-03-24 12:59:08,576 - jsondiff - INFO - +: sales[0].size =27
+    2015-03-24 12:59:08,576 - jsondiff - INFO - -: sales[0].age=27
+    2015-03-24 12:59:08,576 - jsondiff - INFO - -: sales[1].lastName=Galley
 
 4. JSON to Model Diff
 ---------------------
@@ -212,8 +212,8 @@ Should produce output
 
 .. code-block:: bash
 
-    +: accounting[0].firstName=John
-    Changed: sales[0].age to 27 from 24
+    2015-03-24 12:59:08,576 - jsondiff - INFO - +: accounting[0].firstName=John
+    2015-03-24 12:59:08,576 - jsondiff - INFO - Changed: sales[0].age to 27 from 24
 
 As you can see we find a match on numbers even though the type is ‘int’
 (Mary Smith’s age). Also, even though we changed Sally’s age, we were
