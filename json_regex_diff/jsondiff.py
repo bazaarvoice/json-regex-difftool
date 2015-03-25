@@ -7,7 +7,7 @@ import re
 import copy
 
 class JsonDiff(object):
-    def __init__(self, json_file, json_model, list_depth=0,
+    def __init__(self, json_file, json_model, list_depth=2,
                  logger=logging.getLogger()):
 
         self._logger = logger
@@ -423,6 +423,7 @@ class JsonDiff(object):
                                                      current_difference]
                     # set difference back to before the diff
                     self.difference = copy.deepcopy(current_difference)
+                    self._logger.debug("Resetting diff from recursive branch")
                 cur_index += 1
 
             '''
@@ -454,6 +455,8 @@ class JsonDiff(object):
             if best_match_score > 0:
                 # treat as: 'better than nothing match so we'll take it'
                 self.difference.extend(index_to_changeset[match_index])
+                for entry in index_to_changeset[match_index]:
+                    self._logger.debug(entry)
                 json1_matches.append(item)
                 _json2.remove(_json2[match_index])
                 cur_index = match_index  # Should be the after the match
@@ -472,23 +475,32 @@ class JsonDiff(object):
 
         original_index = 0
         for index in range(len(_json2)):
+            # Find the item in the original
             while not _json2[index] == json2_original[::-1][original_index]:
-                original_index += 1
+                original_index = (original_index + 1) % len(json2_original)
             new_path = "{}[{}]".format(path, len(
                 json2_original) - original_index - 1)
             self._expand_diff(_json2[index], new_path, False)
-            original_index += 1
+            original_index = (original_index + 1) %len(json2_original)
 
     def _diff_json_item(self, _json1, _json2, path, use_regex):
-        if use_regex and type(_json2) is unicode:
+        if type(_json1) is unicode:
+            _json1 = _json1.encode('ascii', 'ignore')
+        if type(_json2) is unicode:
+            _json2 = _json2.encode('ascii', 'ignore')
+        if use_regex and type(_json2) is str:
             match = re.match(_json2, str(_json1))
             if not match:
                 self.difference.append(
                     'Changed: {} to {} from {}'.format(path, _json1, _json2))
+                self._logger.debug('Changed: {} to {} from {}'
+                                   .format(path, _json1, _json2))
         else:
             if not _json1 == _json2:
                 self.difference.append(
                     'Changed: {} to {} from {}'.format(path, _json1, _json2))
+                self._logger.debug('Changed: {} to {} from {}'
+                                   .format(path, _json1, _json2))
 
     def _expand_diff(self, blob, path, new_item):
         """
@@ -512,8 +524,19 @@ class JsonDiff(object):
                 else:
                     new_path = "{}.{}".format(path, key)
                 if type(blob[key]) not in [list, dict]:
-                    self.difference.append(
-                        '{}: {}={}'.format(c, new_path, blob[key]))
+                    if type(blob[key]) is unicode:
+                        self.difference.append(
+                            '{}: {}={}'.format(c, new_path,
+                                               blob[key].encode('ascii',
+                                                                'ignore')))
+                        self._logger.debug('{}: {}={}'.format(c, new_path,
+                                               blob[key].encode('ascii',
+                                                                'ignore')))
+                    else:
+                        self.difference.append(
+                            '{}: {}={}'.format(c, new_path, blob[key]))
+                        self._logger.debug(
+                            '{}: {}={}'.format(c, new_path, blob[key]))
                 else:
                     self._expand_diff(blob[key], new_path, new_item)
         elif type(blob) is list:
@@ -521,11 +544,26 @@ class JsonDiff(object):
                 new_path = "{}[{}]".format(path, index)
                 if type(blob[index]) in (list, dict):
                     self._expand_diff(item[index], new_path, new_item)
+                    if type(blob[index]) is unicode:
+                        self.difference.append(
+                            '{}: {}={}'.format(c, new_path,
+                                               blob[index].encode('ascii',
+                                                                  'ignore')))
+                        self._logger.debug(
+                            '{}: {}={}'.format(c, new_path,
+                                               blob[index].encode('ascii',
+                                                                  'ignore')))
+                    else:
+                        self.difference.append(
+                            '{}: {}={}'.format(c, new_path, blob[index]))
+                        self._logger.debug(
+                            '{}: {}={}'.format(c, new_path, blob[index]))
+
                 else:
-                    self.difference.append(
-                        '{}: {}={}'.format(c, new_path, blob[index]))
+                    pass
         else:
             self.difference.append('{}: {}={}'.format(c, path, blob))
+            self._logger.debug('{}: {}={}'.format(c, path, blob))
 
     def comparison(self, use_model):
         for model_name in self.model.keys():
@@ -549,7 +587,7 @@ class JsonDiff(object):
             for change in self.difference:
                 # log instead of print,
                 # in case a module wants to suppress output
-                self._logger.info(change.encode('ascii', 'replace'))
+                self._logger.info(change.encode('ascii', 'ignore'))
             difference.append(self.difference)
             # Reinitialize so that we can run against multiple models
             self.difference = []
@@ -585,6 +623,9 @@ def main():
     p.add_argument('-d', '--diff', action="store_true",
                    help="Set tool to do diff instead of comparison. "
                         "(comparison if not flagged).")
+    p.add_argument('--logging_level', default='INFO', help="e.g. WARNING, "
+                                                           "INFO, DEBUG, 10,"
+                                                           "50, etc...")
     p.add_argument('json', help='The path of the json file')
     p.add_argument('json_model', metavar='json/json_model',
                    help="The path of the .json file or directory of .json "
@@ -599,7 +640,7 @@ def main():
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger = logging.getLogger('jsondiff')
     logger.addHandler(console_handler)
-    logger.setLevel("INFO")
+    logger.setLevel(options.logging_level)
 
     diff_engine = JsonDiff(options.json, options.json_model, 0, logger)
 
