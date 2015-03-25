@@ -7,7 +7,7 @@ here = path.abspath(path.dirname(__file__))
 setup(
     name='json-regex-difftool',
 
-    version='0.1',
+    version='0.2',
 
     description='A tool for doing a comparison or difference of JSON documents'
                 'with regular expression support',
