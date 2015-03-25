@@ -151,6 +151,22 @@ class JsonJsonDiffTest(TestHelper):
                          [u'+: [0]=test', u'-: [0]=other'])
         self.cleanup()
 
+    def test_completely_different_lists_difference(self):
+        """
+        Due to the nature of lists, we have to note specific insertions and
+        deletions as opposed to listing 'Changes'
+        :return:
+        """
+        new_file = self.write_string_to_file('["test1", "test2", "test3"]',
+                                            "item1")
+        old_file = self.write_string_to_file('["other1", "other2", "other3"]',
+                                             "item2")
+        comparison_tool = JsonDiff(new_file, old_file)
+        self.assertEqual(comparison_tool.diff(use_model=False),
+                         [u'+: [0]=test1', u'+: [1]=test2', u'+: [2]=test3',
+                         u'-: [0]=other1', u'-: [1]=other2', u'-: [2]=other3'])
+        self.cleanup()
+
     def test_simple_map_value_difference(self):
         """
         For maps we should be able to tell that a specific value changed if the
