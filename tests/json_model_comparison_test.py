@@ -7,49 +7,49 @@ class JsonModelComparisonTest(TestHelper):
     def test_single_item_equal(self):
         filename1 = self.write_string_to_file('["test"]', "item1")
         filename2 = self.write_string_to_file('["test"]', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
     def test_single_item_not_equal(self):
         filename1 = self.write_string_to_file('["test"]', "item1")
         filename2 = self.write_string_to_file('["different"]', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertFalse(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
     def test_single_item_regex_equal(self):
         filename1 = self.write_string_to_file('["test"]', "item1")
         filename2 = self.write_string_to_file('["(.*)"]', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
     def test_single_item_regex_not_equal(self):
         filename1 = self.write_string_to_file('["test"]', "item1")
         filename2 = self.write_string_to_file('["[0-9]+"]', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertFalse(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
     def test_regex_match_key(self):
         filename1 = self.write_string_to_file('{"key":"value"}', "item1")
         filename2 = self.write_string_to_file('{"(.*)":"value"}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
     def test_regex_match_value(self):
         filename1 = self.write_string_to_file('{"key":"value"}', "item1")
         filename2 = self.write_string_to_file('{"key":"(.*)"}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
     def test_regex_match_key_and_value(self):
         filename1 = self.write_string_to_file('{"key":"value"}', "item1")
         filename2 = self.write_string_to_file('{"(.*)":"(.*)"}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -62,7 +62,7 @@ class JsonModelComparisonTest(TestHelper):
                                               '"key2":"value2"}', "item1")
         filename2 = self.write_string_to_file('{"(.*)":"value1", '
                                               '"(.*)":"value2"}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertFalse(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -75,7 +75,7 @@ class JsonModelComparisonTest(TestHelper):
                                               '"key2":"value2"}', "item1")
         filename2 = self.write_string_to_file('{"(.*)[1]+":"value1",'
                                               '"(.*)":"value2"}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -86,7 +86,7 @@ class JsonModelComparisonTest(TestHelper):
         """
         filename1 = self.write_string_to_file('["test1", "test2"]', "item1")
         filename2 = self.write_string_to_file('["test2", "test1"]', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         # We cannot match ambigous regular expressions
         # Todo create a recursive search to fix this problem
         self.assertFalse(comparison_tool.comparison(use_model=True))
@@ -100,7 +100,7 @@ class JsonModelComparisonTest(TestHelper):
         """
         filename1 = self.write_string_to_file('["test1", "test2"]', "item1")
         filename2 = self.write_string_to_file('["test2", "(.*)"]', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertFalse(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -111,7 +111,7 @@ class JsonModelComparisonTest(TestHelper):
         filename1 = self.write_string_to_file('{"key1": {"key2":"value2"}}',
                                               "item1")
         filename2 = self.write_string_to_file('{"key1":"(.*)"}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertFalse(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -123,7 +123,7 @@ class JsonModelComparisonTest(TestHelper):
                                               "item1")
         filename2 = self.write_string_to_file('{"(.*)": {"key2":"value2"}}',
                                               "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -135,7 +135,7 @@ class JsonModelComparisonTest(TestHelper):
                                               '"key3":"value3"}}', "item1")
         filename2 = self.write_string_to_file('{"(.*)": {"key2":"(.*)",'
                                               '"(.*)":"value3"}}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -147,7 +147,7 @@ class JsonModelComparisonTest(TestHelper):
                                               '"key2":"value2"}', "item1")
         filename2 = self.write_string_to_file('{"key2":"value2",'
                                               '"key1":"value1"}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -159,7 +159,7 @@ class JsonModelComparisonTest(TestHelper):
                                               '"key2":"value2"}', "item1")
         filename2 = self.write_string_to_file('{"(.*)":"value2",'
                                               '"key1":"value1"}', "item2")
-        comparison_tool = JsonDiff(filename1, filename2)
+        comparison_tool = JsonDiff.from_file(filename1, filename2)
         self.assertTrue(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -173,7 +173,7 @@ class JsonModelComparisonTest(TestHelper):
             "dir_item2": '["test2"]',
             "dir_item3": '["test3"]',
         }, "test")
-        comparison_tool = JsonDiff(filename, dirname)
+        comparison_tool = JsonDiff.from_file(filename, dirname)
         self.assertEqual(comparison_tool.comparison(use_model=True),
                          "dir_item1")
         self.cleanup()
@@ -188,7 +188,7 @@ class JsonModelComparisonTest(TestHelper):
             "dir_item2": '["test2"]',
             "dir_item3": '["test3"]',
         }, "test")
-        comparison_tool = JsonDiff(filename, dirname)
+        comparison_tool = JsonDiff.from_file(filename, dirname)
         self.assertFalse(comparison_tool.comparison(use_model=True))
         self.cleanup()
 
@@ -199,7 +199,7 @@ class JsonModelComparisonTest(TestHelper):
             "dir_item2": '["test2"]',
             "dir_item3": '["test3"]',
         }, "test")
-        comparison_tool = JsonDiff(filename1, dirname)
+        comparison_tool = JsonDiff.from_file(filename1, dirname)
         self.assertEqual(comparison_tool.comparison(use_model=True),
                          "dir_item1")
         self.cleanup()

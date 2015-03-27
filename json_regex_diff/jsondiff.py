@@ -7,36 +7,60 @@ import re
 import copy
 
 class JsonDiff(object):
-    def __init__(self, json_file, json_model, list_depth=2,
-                 logger=logging.getLogger()):
+    def __init__(self, new_json, model_map, logger=logging.getLogger(),
+                 is_directory=False, list_depth=0):
 
         self._logger = logger
-        try:
-            self.json_file = json.load(open(json_file))
-        except IOError:
-            self._logger.error("JSON File not found. Check name and try again.")
-            self.json_file = None
-            exit(1)
+        self.new_json = new_json
 
-        self.model = self._set_up_model_map(json_model)
-        self.is_directory = not os.path.isfile(json_model)
+        self.model = model_map
+        self.is_directory = is_directory
 
         self.difference = []
         # variable to control how deep to recursively search
         # currently not used
         self.list_depth = list_depth
 
-        if len(self.model) < 1:
-            self._logger.error("No files could be read in specified directory")
+    @classmethod
+    def from_json(cls, new_json, old_json, logger=logging.getLogger()):
+        """
+        Helper constructor to allow diff given json objects
+        :param new_json: New json file to compare
+        :param old_json: Old version of the json as base from comparison
+        ** Important to note that multiple 'models' are not currently supported
+        when passing in raw json **
+        """
+        model_map = {'old_json': old_json}
+        return cls(new_json, model_map, logger, is_directory=False)
+
+    @classmethod
+    def from_file(cls, json_file, json_model, logger=logging.getLogger()):
+        """
+        Helper constructor to allow diff files
+        :param json_file: Path to new json file
+        :param json_model: Path to old json file or directory of models to
+        compare with
+        ** Important to note that multiple 'models' are not currently supported
+        when computing a diff **
+        """
+
+        try:
+            new_json = json.load(open(json_file))
+        except IOError:
+            logger.error("JSON File not found. Check name and try again")
+            new_json = None
             exit(1)
 
-    def _set_up_model_map(self, json_model):
+        is_directory = not os.path.isfile(json_model)
+
+        #Set up model map
         model_map = {}
         if os.path.isfile(json_model):
             try:
                 model_map[json_model] = json.load(open(json_model))
             except IOError:
-                self._logger.error("Model file not found. Check name and try again")
+                logger.error("Model file not found. "
+                                   "Check name and try again")
                 exit(1)
         elif os.path.isdir(json_model):
             for item in os.listdir(json_model):
@@ -46,19 +70,27 @@ class JsonDiff(object):
                     filename = json_model + item
                     model_map[item] = json.load(open(filename))
                 except IOError:
-                    self._logger.error("Could not open file")
+                    logger.error("Could not open file")
         else:
-            self._logger.error("File or directory not found."
-                         " Check name and try again.")
+            logger.error("File or directory not found. "
+                               "Check name and try again.")
             exit(1)
-        return model_map
 
-    def _clear_match_row(self, match_table, row, cur_index):
+        if len(model_map) < 1:
+            logger.error("No files could be read in specified directory")
+            exit(1)
+
+
+        return cls(new_json, model_map, logger, is_directory)
+
+    @staticmethod
+    def _clear_match_row(match_table, row, cur_index):
         for i in range(len(match_table[0])):
             match_table[row][i] = 0
         match_table[row][cur_index] = 1
 
-    def _clear_match_col(self, match_table, col, cur_index):
+    @staticmethod
+    def _clear_match_col(match_table, col, cur_index):
         for i in range(len(match_table[0])):
             match_table[i][col] = 0
         match_table[cur_index][col] = 1
@@ -132,7 +164,7 @@ class JsonDiff(object):
 
         else:  # ambiguous
             self._logger.error("Ambiguous matching please fix your model "
-                         "to use more specific regexes")
+                               "to use more specific regexes")
             exit(1)
 
     def _lists_equal(self, json_list, regex_list):
@@ -188,7 +220,8 @@ class JsonDiff(object):
         elif type(json_input) is not type(model):
             return False
         else:
-            self._logger.error("Not proper JSON format. Please check your input")
+            self._logger.error("Not proper JSON format. "
+                               "Please check your input")
             exit(1)
 
         # check size
@@ -568,10 +601,10 @@ class JsonDiff(object):
     def comparison(self, use_model):
         for model_name in self.model.keys():
             if use_model:
-                if self.equals_model(self.json_file, self.model[model_name]):
+                if self.equals_model(self.new_json, self.model[model_name]):
                     return model_name if self.is_directory else True
             else:
-                if self.equals_json(self.json_file, self.model[model_name]):
+                if self.equals_json(self.new_json, self.model[model_name]):
                     return model_name if self.is_directory else True
         # no match
         return False
@@ -580,9 +613,9 @@ class JsonDiff(object):
         difference = []
         for model_name in self.model.keys():
             if use_model:
-                self.diff_model(self.json_file, self.model[model_name])
+                self.diff_model(self.new_json, self.model[model_name])
             else:
-                self.diff_json(self.json_file, self.model[model_name])
+                self.diff_json(self.new_json, self.model[model_name])
             self._logger.info('Diff from {}\n'.format(model_name))
             for change in self.difference:
                 # log instead of print,
@@ -642,7 +675,7 @@ def main():
     logger.addHandler(console_handler)
     logger.setLevel(options.logging_level)
 
-    diff_engine = JsonDiff(options.json, options.json_model, 0, logger)
+    diff_engine = JsonDiff.from_file(options.json, options.json_model, logger)
 
     if options.diff:
         if os.path.isdir(options.json_model):
