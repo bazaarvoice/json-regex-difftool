@@ -51,18 +51,18 @@ class JsonDiff(object):
             new_json = None
             exit(1)
 
-        is_directory = not os.path.isfile(json_model)
-
         #Set up model map
         model_map = {}
         if os.path.isfile(json_model):
+            is_directory = False
             try:
                 model_map[json_model] = json.load(open(json_model))
             except IOError:
                 logger.error("Model file not found. "
-                                   "Check name and try again")
+                             "Check name and try again")
                 exit(1)
         elif os.path.isdir(json_model):
+            is_directory = True
             for item in os.listdir(json_model):
                 try:
                     if not json_model.endswith('/'):
@@ -72,14 +72,14 @@ class JsonDiff(object):
                 except IOError:
                     logger.error("Could not open file")
         else:
+            is_directory = False
             logger.error("File or directory not found. "
-                               "Check name and try again.")
+                         "Check name and try again.")
             exit(1)
 
         if len(model_map) < 1:
             logger.error("No files could be read in specified directory")
             exit(1)
-
 
         return cls(new_json, model_map, logger, is_directory)
 
@@ -264,7 +264,8 @@ class JsonDiff(object):
         # if we make it through all of this, hooray! Match
         return True
 
-    def equals_json(self, _json1, _json2):
+    @staticmethod
+    def equals_json(_json1, _json2):
         """
         This module assumes that we are passing to json files.
         To determine equivalence we will simply load both, and compare with
@@ -514,7 +515,7 @@ class JsonDiff(object):
             new_path = "{}[{}]".format(path, len(
                 json2_original) - original_index - 1)
             self._expand_diff(_json2[index], new_path, False)
-            original_index = (original_index + 1) %len(json2_original)
+            original_index = (original_index + 1) % len(json2_original)
 
     def _diff_json_item(self, _json1, _json2, path, use_regex):
         if type(_json1) is unicode:
@@ -562,9 +563,10 @@ class JsonDiff(object):
                             '{}: {}={}'.format(c, new_path,
                                                blob[key].encode('ascii',
                                                                 'ignore')))
-                        self._logger.debug('{}: {}={}'.format(c, new_path,
-                                               blob[key].encode('ascii',
-                                                                'ignore')))
+                        self._logger.debug('{}: {}={}'
+                                           .format(c, new_path,
+                                                   blob[key]
+                                                   .encode('ascii', 'ignore')))
                     else:
                         self.difference.append(
                             '{}: {}={}'.format(c, new_path, blob[key]))
