@@ -14,7 +14,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test"]', "item1")
         old_file = self.write_string_to_file('["test"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False), [])
         self.cleanup()
 
@@ -26,7 +26,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test"]', "item1")
         old_file = self.write_string_to_file('{"key":"value"}', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          ["TypeDifference :  - is list: ([u'test']), "
                           "but was dict: ({u'key': u'value'})"])
@@ -39,7 +39,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test1", "test2"]', "item1")
         old_file = self.write_string_to_file('["test1"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [1]=test2'])
         self.cleanup()
@@ -51,7 +51,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test2", "test1"]', "item1")
         old_file = self.write_string_to_file('["test1"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [0]=test2'])
         self.cleanup()
@@ -63,7 +63,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test2"]', "item1")
         old_file = self.write_string_to_file('["test1", "test2"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'-: [0]=test1'])
         self.cleanup()
@@ -75,7 +75,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test2"]', "item1")
         old_file = self.write_string_to_file('["test2", "test1"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'-: [1]=test1'])
         self.cleanup()
@@ -83,7 +83,7 @@ class JsonJsonDiffTest(TestHelper):
     def test_switch_order(self):
         new_file = self.write_string_to_file('["test1", "test2"]', "item1")
         old_file = self.write_string_to_file('["test2", "test1"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [1]=test2', u'-: [0]=test2'])
         self.cleanup()
@@ -94,7 +94,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test1"]', "item1")
         old_file = self.write_string_to_file('["test1", "test1"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'-: [1]=test1'])
         self.cleanup()
@@ -108,7 +108,7 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('["test1"]', "item1")
         old_file = self.write_string_to_file('["test1", "test1", "test1"]',
                                              "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'-: [2]=test1', u'-: [1]=test1'])
         self.cleanup()
@@ -119,7 +119,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test1", "test1"]', "item1")
         old_file = self.write_string_to_file('["test1"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [1]=test1'])
         self.cleanup()
@@ -133,7 +133,7 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('["test1", "test1", "test1"]',
                                              "item1")
         old_file = self.write_string_to_file('["test1"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [1]=test1', u'+: [2]=test1'])
         self.cleanup()
@@ -146,7 +146,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('["test"]', "item1")
         old_file = self.write_string_to_file('["other"]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [0]=test', u'-: [0]=other'])
         self.cleanup()
@@ -161,7 +161,7 @@ class JsonJsonDiffTest(TestHelper):
                                             "item1")
         old_file = self.write_string_to_file('["other1", "other2", "other3"]',
                                              "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [0]=test1', u'+: [1]=test2', u'+: [2]=test3',
                          u'-: [0]=other1', u'-: [1]=other2', u'-: [2]=other3'])
@@ -175,7 +175,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('{"key":"value1"}', "item1")
         old_file = self.write_string_to_file('{"key":"value2"}', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'Changed: key to value1 from value2'])
         self.cleanup()
@@ -188,7 +188,7 @@ class JsonJsonDiffTest(TestHelper):
         """
         new_file = self.write_string_to_file('{"key1":"value1"}', "item1")
         old_file = self.write_string_to_file('{"key2":"value1"}', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: key1=value1', u'-: key2=value1'])
         self.cleanup()
@@ -201,7 +201,7 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('{"key1":"value1", '
                                              '"key2":"value1"}', "item1")
         old_file = self.write_string_to_file('{"key1":"value1"}', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: key2=value1'])
         self.cleanup()
@@ -209,7 +209,7 @@ class JsonJsonDiffTest(TestHelper):
     def test_equal_maps_nested_in_list(self):
         new_file = self.write_string_to_file('[{"key1":"value1"}]', "item1")
         old_file = self.write_string_to_file('[{"key1":"value1"}]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False), [])
         self.cleanup()
 
@@ -217,7 +217,7 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('[{"key2":"value2"}]', "item1")
         old_file = self.write_string_to_file('[{"key1":"value1", '
                                              '"key2":"value2"}]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'-: [0].key1=value1'])
         self.cleanup()
@@ -226,7 +226,7 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('[{"key1":"value1", '
                                              '"key2":"value2"}]', "item2")
         old_file = self.write_string_to_file('[{"key2":"value2"}]', "item1")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [0].key1=value1'])
         self.cleanup()
@@ -234,14 +234,14 @@ class JsonJsonDiffTest(TestHelper):
     def test_equal_list_nested_in_map(self):
         new_file = self.write_string_to_file('{"key1":["value1"]}', "item1")
         old_file = self.write_string_to_file('{"key1":["value1"]}', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False), [])
         self.cleanup()
 
     def test_unequal_list_nested_in_map(self):
         new_file = self.write_string_to_file('{"key1":["value2"]}', "item1")
         old_file = self.write_string_to_file('{"key1":["value1"]}', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: key1[0]=value2', u'-: key1[0]=value1'])
         self.cleanup()
@@ -250,7 +250,7 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('{"key1":["value1", "value2"]}',
                                              "item1")
         old_file = self.write_string_to_file('{"key1":["value1"]}', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: key1[1]=value2'])
         self.cleanup()
@@ -259,7 +259,7 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('{"key1":["value2"]}', "item1")
         old_file = self.write_string_to_file('{"key1":["value1","value2"]}',
                                              "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'-: key1[0]=value1'])
         self.cleanup()
@@ -277,7 +277,7 @@ class JsonJsonDiffTest(TestHelper):
                                              '"key2":"value2"}]', "item1")
         old_file = self.write_string_to_file('[{"key1":"value1",'
                                              '"key2":"value2"}]', "item2")
-        comparison_tool = JsonDiff(new_file, old_file)
+        comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False), [
             u'-: [0].key2=value2',
             u'+: [1].key2=value2',
