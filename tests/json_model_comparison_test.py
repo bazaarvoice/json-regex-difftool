@@ -1,4 +1,4 @@
-from test_helper import TestHelper
+from .test_helper import TestHelper
 from json_regex_diff.jsondiff import JsonDiff
 
 

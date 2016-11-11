@@ -1,6 +1,7 @@
 import os
 import unittest
 
+from six import iteritems
 
 class TestHelper(unittest.TestCase):
 
@@ -17,7 +18,7 @@ class TestHelper(unittest.TestCase):
 
     def write_files_to_directory(self, filename_to_string, sub_directory):
         self.make_tmp_directory()
-        for filename, string in filename_to_string.iteritems():
+        for filename, string in iteritems(filename_to_string):
             if not os.path.exists('tmp/' + sub_directory):
                 os.mkdir('tmp/' + sub_directory)
             f = open('tmp/' + sub_directory + '/' + filename, 'w')

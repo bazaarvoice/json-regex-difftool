@@ -1,4 +1,6 @@
-from test_helper import TestHelper
+import sys
+
+from .test_helper import TestHelper
 from json_regex_diff.jsondiff import JsonDiff
 
 
@@ -75,7 +77,12 @@ class JsonModelDiffTest(TestHelper):
                                               "item1")
         filename2 = self.write_string_to_file('{"key1":"(.*)"}', "item2")
         comparison_tool = JsonDiff.from_file(filename1, filename2)
-        self.assertEqual(comparison_tool.diff(use_model=True), [
-            "TypeDifference : key1 - dict: ({u'key2': u'value'}), "
-            "unicode: ((.*))"])
+        if sys.version_info.major == 3:
+            self.assertEqual(comparison_tool.diff(use_model=True), [
+                "TypeDifference : key1 - dict: ({'key2': 'value'}), "
+                "str: ((.*))"])
+        else:
+            self.assertEqual(comparison_tool.diff(use_model=True), [
+                "TypeDifference : key1 - dict: ({u'key2': u'value'}), "
+                "unicode: ((.*))"])
         self.cleanup()

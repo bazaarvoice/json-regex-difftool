@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 import argparse
+import copy
 import json
 import logging
 import os
 import re
-import copy
+
+from builtins import bytes
+from six import text_type
+
 
 class JsonDiff(object):
     def __init__(self, new_json, model_map, logger=logging.getLogger(),
@@ -51,7 +55,7 @@ class JsonDiff(object):
             new_json = None
             exit(1)
 
-        #Set up model map
+        # Set up model map
         model_map = {}
         if os.path.isfile(json_model):
             is_directory = False
@@ -177,17 +181,17 @@ class JsonDiff(object):
             if not type(json_list[index]) == type(regex_list[index]):
                 return False
 
-            if type(json_list[index]) is dict:
+            if isinstance(json_list[index], dict):
                 # do json comparison
                 if not self.equals_model(json_list[index], regex_list[index]):
                     return False
 
-            elif type(json_list[index]) is list:
+            elif isinstance(json_list[index], list):
                 # another list comparison
                 if not self._lists_equal(json_list[index], regex_list[index]):
                     return False
 
-            elif type(json_list[index]) is unicode:
+            elif isinstance(json_list[index], text_type):
                 # regex match
                 if not re.match(regex_list[index], json_list[index]):
                     return False
@@ -212,10 +216,10 @@ class JsonDiff(object):
         """
         json_keys = []
         model_keys = []
-        if type(json_input) is dict and type(model) is dict:
-            json_keys = json_input.keys()
-            model_keys = model.keys()
-        elif type(json_input) is list and type(model) is list:
+        if isinstance(json_input, dict) and isinstance(model, dict):
+            json_keys = list(json_input)
+            model_keys = list(model)
+        elif isinstance(json_input, list) and isinstance(model, list):
             return self._lists_equal(json_input, model)
         elif type(json_input) is not type(model):
             return False
@@ -231,28 +235,28 @@ class JsonDiff(object):
         # check 1-1 correspondence
         key_matches = self._one_to_one(json_keys, model_keys)
 
-        if not len(json_keys) == len(key_matches.keys()):
+        if not len(json_keys) == len(list(key_matches)):
             return False
 
         # check values
-        for key in key_matches.keys():
+        for key in key_matches:
             if not type(json_input.get((key_matches[key]))) == \
                     type(model[key]):
                 return False
-            if type(model[key]) is dict:
+            if isinstance(model[key], dict):
                 # recursive search
                 if not self.equals_model(json_input.get(key_matches[key]),
                                          model[key]):
                     return False
                     # otherwise continue
 
-            elif type(model[key]) is list:
+            elif isinstance(model[key], list):
                 # lists are deterministic! yay!
                 if not self._lists_equal(json_input.get(key_matches[key]),
                                          model[key]):
                     return False
 
-            elif type(model[key]) is unicode:
+            elif isinstance(model[key], text_type):
                 if not re.match(model[key], json_input.get(key_matches[key])):
                     return False
 
@@ -276,22 +280,22 @@ class JsonDiff(object):
 
     def diff_model(self, _json1, _json2, path='', depth=-1):
         if not type(_json1) == type(_json2):
-            if type(_json2) is unicode and type(_json1) not in [list, dict]:
+            if isinstance(_json2, text_type) and type(_json1) not in [list, dict]:
                 # Potential regex match
                 self._diff_json_item(_json1, _json2, path, True)
             else:
                 self.difference.append('TypeDifference : {} - {}:'
                                        ' ({}), {}: ({})'
                                        .format(path, type(_json1).__name__,
-                                               str(_json1),
+                                               text_type(_json1),
                                                type(_json2).__name__,
-                                               str(_json2)))
+                                               text_type(_json2)))
         else:
             # they are the same type
             # Three choices: dict, list, item
-            if type(_json1) is dict:
+            if isinstance(_json1, dict):
                 self._diff_json_dict(_json1, _json2, path, depth, True)
-            elif type(_json1) is list:
+            elif isinstance(_json1, list):
                 self._diff_json_list(_json1, _json2, path, depth, True)
             else:
                 self._diff_json_item(_json1, _json2, path, True)
@@ -323,14 +327,14 @@ class JsonDiff(object):
             self.difference.append('TypeDifference : {} - is {}: ({}),'
                                    ' but was {}: ({})'
                                    .format(path, type(_json1).__name__,
-                                           str(_json1), type(_json2).__name__,
-                                           str(_json2)))
+                                           text_type(_json1), type(_json2).__name__,
+                                           text_type(_json2)))
         else:
             # they are the same type
             # Three choices: dict, list, item
-            if type(_json1) is dict:
+            if isinstance(_json1, dict):
                 self._diff_json_dict(_json1, _json2, path, depth, False)
-            elif type(_json1) is list:
+            elif isinstance(_json1, list):
                 self._diff_json_list(_json1, _json2, path, depth, False)
             else:
                 self._diff_json_item(_json1, _json2, path, False)
@@ -339,8 +343,8 @@ class JsonDiff(object):
         # Depth greater > 0 indicates we should compare keys
         # Negative depth means continuously recursively search
         if not depth == 0:
-            json1_keys = _json1.keys()
-            json2_keys = _json2.keys()
+            json1_keys = list(_json1)
+            json2_keys = list(_json2)
             matched_keys = []
             for key in json1_keys:
                 if len(path) == 0:
@@ -408,10 +412,10 @@ class JsonDiff(object):
                     _json2.remove(_json2[cur_index])
                     break
                 elif use_regex and type(item) not in [list, dict]:
-                    if type(_json2[cur_index]) is unicode:
+                    if isinstance(_json2[cur_index], text_type):
                         # we can use as a pattern though item could be an
                         # integer say
-                        match = re.match(_json2[cur_index], str(item))
+                        match = re.match(_json2[cur_index], text_type(item))
                         if match:
                             index_to_irrelevance[cur_index] = 0
                             json1_matches.append(item)
@@ -469,7 +473,7 @@ class JsonDiff(object):
             '   best match
             '     - In case of tie, lowest index wins
             '''
-            indices = index_to_irrelevance.keys()
+            indices = list(index_to_irrelevance)
             if len(indices) == 0:
                 break
             indices.sort()
@@ -518,12 +522,12 @@ class JsonDiff(object):
             original_index = (original_index + 1) % len(json2_original)
 
     def _diff_json_item(self, _json1, _json2, path, use_regex):
-        if type(_json1) is unicode:
+        if isinstance(_json1, text_type) :
             _json1 = _json1.encode('ascii', 'ignore')
-        if type(_json2) is unicode:
+        if isinstance(_json2, text_type):
             _json2 = _json2.encode('ascii', 'ignore')
-        if use_regex and type(_json2) is str:
-            match = re.match(_json2, str(_json1))
+        if use_regex and isinstance(_json2, bytes):
+            match = re.match(_json2, bytes(_json1))
             if not match:
                 self.difference.append(
                     'Changed: {} to {} from {}'.format(path, _json1, _json2))
@@ -551,14 +555,14 @@ class JsonDiff(object):
             c = '+'
         else:
             c = '-'
-        if type(blob) is dict:
-            for key in blob.keys():
+        if isinstance(blob, dict):
+            for key in blob:
                 if len(path) == 0:
                     new_path = key
                 else:
                     new_path = "{}.{}".format(path, key)
                 if type(blob[key]) not in [list, dict]:
-                    if type(blob[key]) is unicode:
+                    if isinstance(blob[key], text_type):
                         self.difference.append(
                             '{}: {}={}'.format(c, new_path,
                                                blob[key].encode('ascii',
@@ -574,12 +578,12 @@ class JsonDiff(object):
                             '{}: {}={}'.format(c, new_path, blob[key]))
                 else:
                     self._expand_diff(blob[key], new_path, new_item)
-        elif type(blob) is list:
+        elif isinstance(blob, list):
             for (index, item) in enumerate(blob):
                 new_path = "{}[{}]".format(path, index)
-                if type(blob[index]) in (list, dict):
+                if isinstance(blob[index], (list, dict)):
                     self._expand_diff(item[index], new_path, new_item)
-                    if type(blob[index]) is unicode:
+                    if isinstance(blob[index], text_type):
                         self.difference.append(
                             '{}: {}={}'.format(c, new_path,
                                                blob[index].encode('ascii',
@@ -601,7 +605,7 @@ class JsonDiff(object):
             self._logger.debug('{}: {}={}'.format(c, path, blob))
 
     def comparison(self, use_model):
-        for model_name in self.model.keys():
+        for model_name in self.model:
             if use_model:
                 if self.equals_model(self.new_json, self.model[model_name]):
                     return model_name if self.is_directory else True
@@ -613,7 +617,8 @@ class JsonDiff(object):
 
     def diff(self, use_model):
         difference = []
-        for model_name in self.model.keys():
+        self._logger.info(self.model)
+        for model_name in self.model:
             if use_model:
                 self.diff_model(self.new_json, self.model[model_name])
             else:
