@@ -3,6 +3,7 @@ import unittest
 
 from six import iteritems
 
+
 class TestHelper(unittest.TestCase):
 
     def make_tmp_directory(self):
@@ -38,4 +39,3 @@ class TestHelper(unittest.TestCase):
             else:
                 self.cleanup_directory(path+'/'+filename)
                 os.rmdir(path+'/'+filename)
-

@@ -280,7 +280,8 @@ class JsonDiff(object):
 
     def diff_model(self, _json1, _json2, path='', depth=-1):
         if not type(_json1) == type(_json2):
-            if isinstance(_json2, text_type) and type(_json1) not in [list, dict]:
+            if isinstance(
+                    _json2, text_type) and type(_json1) not in [list, dict]:
                 # Potential regex match
                 self._diff_json_item(_json1, _json2, path, True)
             else:
@@ -327,7 +328,8 @@ class JsonDiff(object):
             self.difference.append('TypeDifference : {} - is {}: ({}),'
                                    ' but was {}: ({})'
                                    .format(path, type(_json1).__name__,
-                                           text_type(_json1), type(_json2).__name__,
+                                           text_type(_json1),
+                                           type(_json2).__name__,
                                            text_type(_json2)))
         else:
             # they are the same type
