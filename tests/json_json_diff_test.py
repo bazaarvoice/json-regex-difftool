@@ -1,9 +1,8 @@
 #!/usr/bin/env python
+import sys
 
-from test_helper import TestHelper
+from .test_helper import TestHelper
 from json_regex_diff.jsondiff import JsonDiff
-
-
 
 
 class JsonJsonDiffTest(TestHelper):
@@ -27,9 +26,14 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('["test"]', "item1")
         old_file = self.write_string_to_file('{"key":"value"}', "item2")
         comparison_tool = JsonDiff.from_file(new_file, old_file)
-        self.assertEqual(comparison_tool.diff(use_model=False),
-                         ["TypeDifference :  - is list: ([u'test']), "
-                          "but was dict: ({u'key': u'value'})"])
+        if sys.version_info.major == 3:
+            self.assertEqual(comparison_tool.diff(use_model=False),
+                             ["TypeDifference :  - is list: (['test']), "
+                              "but was dict: ({'key': 'value'})"])
+        else:
+            self.assertEqual(comparison_tool.diff(use_model=False),
+                             ["TypeDifference :  - is list: ([u'test']), "
+                              "but was dict: ({u'key': u'value'})"])
         self.cleanup()
 
     def test_list_addition_to_end(self):
@@ -157,10 +161,10 @@ class JsonJsonDiffTest(TestHelper):
         deletions as opposed to listing 'Changes'
         :return:
         """
-        new_file = self.write_string_to_file('["test1", "test2", "test3"]',
-                                            "item1")
-        old_file = self.write_string_to_file('["other1", "other2", "other3"]',
-                                             "item2")
+        new_file = self.write_string_to_file(
+            '["test1", "test2", "test3"]', "item1")
+        old_file = self.write_string_to_file(
+            '["other1", "other2", "other3"]', "item2")
         comparison_tool = JsonDiff.from_file(new_file, old_file)
         self.assertEqual(comparison_tool.diff(use_model=False),
                          [u'+: [0]=test1', u'+: [1]=test2', u'+: [2]=test3',
@@ -176,14 +180,18 @@ class JsonJsonDiffTest(TestHelper):
         new_file = self.write_string_to_file('{"key":"value1"}', "item1")
         old_file = self.write_string_to_file('{"key":"value2"}', "item2")
         comparison_tool = JsonDiff.from_file(new_file, old_file)
-        self.assertEqual(comparison_tool.diff(use_model=False),
-                         [u'Changed: key to value1 from value2'])
+        if sys.version_info.major == 3:
+            self.assertEqual(comparison_tool.diff(use_model=False),
+                             [u"Changed: key to b'value1' from b'value2'"])
+        else:
+            self.assertEqual(comparison_tool.diff(use_model=False),
+                             [u'Changed: key to value1 from value2'])
         self.cleanup()
 
     def test_simple_map_key_difference(self):
         """
-        If a key changes, we must treat the maps as completely different objects
-        even if their values change
+        If a key changes, we must treat the maps as completely different
+        objects even if their values change
         :return:
         """
         new_file = self.write_string_to_file('{"key1":"value1"}', "item1")
@@ -270,7 +278,7 @@ class JsonJsonDiffTest(TestHelper):
         for the first item in the new list if there is anything that can match
         at all, even if there is a better match elsewhere
         """
-        #todo fix this bug in matching
+        # todo fix this bug in matching
 
         new_file = self.write_string_to_file('[{"key1":"value1"},'
                                              '{"key1":"value1",'
@@ -278,11 +286,19 @@ class JsonJsonDiffTest(TestHelper):
         old_file = self.write_string_to_file('[{"key1":"value1",'
                                              '"key2":"value2"}]', "item2")
         comparison_tool = JsonDiff.from_file(new_file, old_file)
-        self.assertEqual(comparison_tool.diff(use_model=False), [
-            u'-: [0].key2=value2',
-            u'+: [1].key2=value2',
-            u'+: [1].key1=value1'
-        ])
-        #Ideally should return: +: [0].key1=value1
+        if sys.version_info.major == 3:
+            self.assertEqual(
+                sorted(comparison_tool.diff(use_model=False)),
+                sorted([
+                    "-: [0].key2=value2",
+                    "+: [1].key2=b'value2'",
+                    "+: [1].key1=b'value1'"
+                ]))
+        else:
+            self.assertEqual(comparison_tool.diff(use_model=False), [
+                u'-: [0].key2=value2',
+                u'+: [1].key2=value2',
+                u'+: [1].key1=value1'
+            ])
+        # Ideally should return: +: [0].key1=value1
         self.cleanup()
-
